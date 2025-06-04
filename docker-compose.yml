@@ -1,0 +1,14 @@
+services:
+  wiki-telegram-notifier:
+    build: .
+    container_name: wiki-telegram-notifier
+    env_file:
+      - .env
+    volumes:
+      - wiki_cache:/app
+      - logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  wiki_cache:
+  logs:
