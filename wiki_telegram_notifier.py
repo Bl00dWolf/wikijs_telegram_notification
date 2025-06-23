@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 import logging
 import sys
+import re  # Для регулярных выражений
 
 # ------- Настройки из переменных окружения -------
 WIKI_GRAPHQL_URL = os.getenv("WIKI_GRAPHQL_URL")
@@ -27,14 +28,24 @@ logging.basicConfig(
     ]
 )
 
+
 # --- Вспомогательные функции ---
+def escape_markdown(text):
+    """Экранирует специальные символы MarkdownV2"""
+    if not text:
+        return ""
+    # Список символов, которые нужно экранировать в MarkdownV2
+    pattern = r"([_*\[\]()~`>#+\-={}.!\\])"
+    return re.sub(pattern, r"\\\1", text)
+
+
 def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"   
     payload = {
-	"message_thread_id": TELEGRAM_THREAD_ID,
+        "message_thread_id": TELEGRAM_THREAD_ID,
         "chat_id": TELEGRAM_CHANNEL_ID,
         "text": message,
-        "parse_mode": "Markdown",
+        "parse_mode": "MarkdownV2",
         "disable_web_page_preview": True
     }
     try:
@@ -46,6 +57,7 @@ def send_telegram_message(message):
     except Exception as e:
         logging.error("Не удалось отправить сообщение: %s", str(e))
 
+
 def load_cache():
     try:
         with open(CACHE_FILE, "r") as f:
@@ -54,10 +66,12 @@ def load_cache():
         logging.warning("Файл кэша не найден или повреждён: %s", str(e))
         return {}
 
+
 def save_cache(data):
     with open(CACHE_FILE, "w") as f:
         json.dump(data, f, indent=2)
     logging.debug("Кэш сохранён")
+
 
 def fetch_wiki_pages():
     query = """
@@ -90,6 +104,7 @@ def fetch_wiki_pages():
         logging.error("Ошибка подключения к Wiki.js: %s", str(e))
     return []
 
+
 def check_wiki_updates():
     cache = load_cache()
     now = datetime.now(timezone.utc)
@@ -106,23 +121,29 @@ def check_wiki_updates():
 
             cached = cache.get(page_id)
 
+            # Экранируем заголовок и описание перед использованием
+            escaped_title = escape_markdown(page['title'])
+            escaped_description = escape_markdown(page['description']) if page.get('description') else ""
+            description_text = f"\n\n{escaped_description}"
+            link = f"{SITE_URL}{page['path']}"
+
             if is_first_run:
                 cache[page_id] = {"createdAt": page["createdAt"], "updatedAt": page["updatedAt"]}
                 continue
 
             if not cached:
-                link = f"{SITE_URL}{page['path']}"
-                description_text = f"\n\n{page['description']}" if page.get('description') else ""
-                message = f"🆕 **Новая статья:**\n{page['title']}{description_text}\n\n🔗 [Читать]({link})"
+												  
+																								  
+                message = f"🆕 *Новая статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
                 send_telegram_message(message)
                 cache[page_id] = {"createdAt": page["createdAt"], "updatedAt": page["updatedAt"]}
                 continue
 
             cached_updated_at = datetime.fromisoformat(cached["updatedAt"].replace("Z", "+00:00")).timestamp()
             if updated_at > cutoff_time and updated_at != cached_updated_at:
-                link = f"{SITE_URL}{page['path']}"
-                description_text = f"\n\n{page['description']}" if page.get('description') else ""
-                message = f"🔄 **Обновлена статья:**\n{page['title']}{description_text}\n\n🔗 [Читать]({link})"
+												  
+																								  
+                message = f"🔄 *Обновлена статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
                 send_telegram_message(message)
                 cache[page_id]["updatedAt"] = page["updatedAt"]
 
@@ -130,6 +151,7 @@ def check_wiki_updates():
 
     except Exception as e:
         logging.error("Ошибка при проверке обновлений Wiki: %s", str(e))
+
 
 # --- Точка входа ---
 if __name__ == "__main__":
