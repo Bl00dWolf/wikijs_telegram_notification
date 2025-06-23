@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 import logging
 import sys
-import re  # Для регулярных выражений
+import re
 
 # ------- Настройки из переменных окружения -------
 WIKI_GRAPHQL_URL = os.getenv("WIKI_GRAPHQL_URL")
@@ -40,7 +40,7 @@ def escape_markdown(text):
 
 
 def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"   
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "message_thread_id": TELEGRAM_THREAD_ID,
         "chat_id": TELEGRAM_CHANNEL_ID,
@@ -132,8 +132,6 @@ def check_wiki_updates():
                 continue
 
             if not cached:
-												  
-																								  
                 message = f"🆕 *Новая статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
                 send_telegram_message(message)
                 cache[page_id] = {"createdAt": page["createdAt"], "updatedAt": page["updatedAt"]}
@@ -141,8 +139,6 @@ def check_wiki_updates():
 
             cached_updated_at = datetime.fromisoformat(cached["updatedAt"].replace("Z", "+00:00")).timestamp()
             if updated_at > cutoff_time and updated_at != cached_updated_at:
-												  
-																								  
                 message = f"🔄 *Обновлена статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
                 send_telegram_message(message)
                 cache[page_id]["updatedAt"] = page["updatedAt"]
