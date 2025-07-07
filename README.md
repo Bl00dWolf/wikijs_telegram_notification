@@ -41,12 +41,19 @@ CHECK_INTERVAL_MINUTES=5
 В файле .env указываются основные переменные для работы:
 
 `WIKI_GRAPHQL_URL` - адрес до `graphql` у WikiJS
+
 `WIKI_API_TOKEN` - API токен от `WikiJS`
+
 `SITE_URL` - адрес до `WikiJS`, он будет использован в ссылке в сообщении на статью, которую пришлет бот
+
 `TELEGRAM_BOT_TOKEN` - API токен от телеграм бота
+
 `TELEGRAM_CHANNEL_ID` - ID канала в который присылать сообщение от бота
+
 `TELEGRAM_THREAD_ID` - ID топика (если есть) в который присылать сообщение от бота
+
 `CHECK_INTERVAL_MINUTES` - как часто проверять WikiJS на новые или измененные статьи.
+
 
 # Запуск
 
