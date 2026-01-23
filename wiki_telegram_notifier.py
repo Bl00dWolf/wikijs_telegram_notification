@@ -139,7 +139,10 @@ def check_wiki_updates():
 
             cached_updated_at = datetime.fromisoformat(cached["updatedAt"].replace("Z", "+00:00")).timestamp()
             if updated_at > cutoff_time and updated_at != cached_updated_at:
-                message = f"🔄 *Обновлена статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
+                if len(description_text) > 2:
+                    message = f'*Обновлена статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})'
+                else:
+                    message = f'*Обновлена статья:*\n{escaped_title}\n🔗 [Читать]({link})'
                 send_telegram_message(message)
                 cache[page_id]["updatedAt"] = page["updatedAt"]
 
