@@ -132,7 +132,10 @@ def check_wiki_updates():
                 continue
 
             if not cached:
-                message = f"🆕 *Новая статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
+                if len(description_text) > 2:
+                    message = f"🆕 *Новая статья:*\n{escaped_title}{description_text}\n\n🔗 [Читать]({link})"
+                else:
+                    message = f"🆕 *Новая статья:*\n{escaped_title}\n🔗 [Читать]({link})"
                 send_telegram_message(message)
                 cache[page_id] = {"createdAt": page["createdAt"], "updatedAt": page["updatedAt"]}
                 continue
